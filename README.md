@@ -1,0 +1,130 @@
+triangulated_face_realtime — simplified real-time face recognition
+
+Quick start
+
+1. Create a virtualenv and install dependencies:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+2. Put your Gemini API key in `.env` or export `GEMINI_API_KEY`.
+
+3. Run:
+
+```powershell
+python triangulated_face_realtime.py
+```
+
+Controls
+- `q`: quit
+- `e`: start enrollment
+- `space`: capture enrollment frame
+- `s`: save enrollment
+- `c`: cancel enrollment
+- `g`: request Gemini suggestion for first visible face
+- `a`: accept a pending Gemini suggestion (if any)
+
+Notes
+- Gemini suggestions will be auto-accepted when confidence >= 0.80.
+- If `google-genai` is not available, the script falls back to `google-generativeai` if installed (deprecated).
+
+---
+
+## Gemini Auto-Training (NEW)
+
+Real-time automatic face learning with Gemini-powered accuracy optimization.
+
+### Features
+- **Real-time auto-labeling**: Gemini analyzes each detected face in real-time
+- **Confidence-based auto-enrollment**: Faces above 0.85 confidence automatically added to model
+- **User confirmation**: Medium-confidence faces (0.65-0.85) require approval
+- **Retraining detection**: Flags conflicting predictions for model improvement
+- **Full audit logging**: Every decision logged for transparency and debugging
+- **Accuracy dashboard**: Web-based metrics and performance visualization
+
+### Quick Start
+
+1. Start the auto-training real-time recognition:
+
+```powershell
+python triangulated_face_realtime_autotrain.py
+```
+
+2. In a separate terminal, start the accuracy dashboard:
+
+```powershell
+python gemini_accuracy_dashboard.py
+# Then visit http://localhost:5000 in your browser
+```
+
+### Auto-Training Controls
+
+- `q`: quit
+- `e`: start manual enrollment
+- `space`: capture frame during enrollment
+- `s`: save manual enrollment
+- `c`: cancel enrollment
+- `y`: approve next pending auto-enrollment
+- `n`: reject next pending auto-enrollment
+- `l`: list all pending confirmations
+- `TAB`: show audit log
+
+### How It Works
+
+1. **Detection**: Face detected from webcam
+2. **Gemini Labeling**: Gemini suggests identity with confidence score
+3. **Decision Making**:
+   - **High confidence (>= 0.85)**: Auto-enroll to model
+   - **Medium confidence (0.65-0.85)**: Requires your approval (y/n keys)
+   - **Low confidence (< 0.65)**: Skipped
+   - **Conflicts**: If local match differs from Gemini → flags for retraining
+4. **Logging**: All decisions saved to `models/auto_training_audit.log`
+5. **Dashboard**: Real-time metrics updated as you train
+
+### Dashboard Features
+
+- **Confidence Distribution**: Histogram of all Gemini confidence scores
+- **24h Activity Timeline**: Auto-enrollments, approvals, rejections over time
+- **Performance by Identity**: Per-person enrollment success rates
+- **Recent Decisions**: Latest auto-training actions with timestamps
+- **API Endpoints**:
+  - `/api/summary` - Overall statistics
+  - `/api/confidence-dist` - Confidence distribution data
+  - `/api/timeline` - 24-hour timeline
+  - `/api/identities` - Per-identity performance
+
+### Configuration
+
+Edit `GeminiAutoTrainer` initialization in `triangulated_face_realtime_autotrain.py`:
+
+```python
+trainer = GeminiAutoTrainer(
+    api_key=api_key,
+    auto_enroll_threshold=0.85,        # Confidence threshold for auto-enrollment
+    confidence_retraining_threshold=0.65,  # Threshold for flagging retraining
+    require_user_confirmation=True,     # Require approval for medium confidence
+    model_name="gemini-1.5-flash",     # Gemini model to use
+)
+```
+
+### Audit Log
+
+All decisions are logged to `models/auto_training_audit.log` as JSON:
+
+```json
+{"timestamp": "2026-05-19T10:30:45", "action": "auto_enroll", "label": "Alice", "confidence": 0.92}
+{"timestamp": "2026-05-19T10:30:50", "action": "face_enrolled", "label": "Alice", "identity_id": 1}
+{"timestamp": "2026-05-19T10:31:00", "action": "flag_retraining", "label": "Bob", "reason": "conflict"}
+```
+
+### Tips for Best Results
+
+1. **Approve initial faces**: High-confidence auto-enrollments usually correct
+2. **Watch confidence trends**: Low average confidence may indicate lighting issues
+3. **Monitor retraining flags**: These indicate where model needs improvement
+4. **Regular dashboard review**: Spot patterns in what's working/failing
+5. **Adjust thresholds**: If too many false positives, lower auto_enroll_threshold
+6. **Manual cleanup**: Use `photo_library_feedback_trainer.py` for bulk validation

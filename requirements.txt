@@ -1,0 +1,10 @@
+opencv-python
+mediapipe
+numpy
+pillow
+google-genai
+flask
+plotly
+pandas
+# If you prefer the old client, install deprecated package instead:
+# google-generativeai
