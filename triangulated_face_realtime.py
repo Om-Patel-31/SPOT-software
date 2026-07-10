@@ -23,6 +23,7 @@ Run:
 import json
 import importlib
 import os
+import sys
 import time
 import warnings
 from collections import deque
@@ -92,11 +93,28 @@ def load_environment_file(env_path: Path) -> None:
 load_environment_file(Path(__file__).resolve().parent / ".env")
 
 
+def get_app_root() -> Path:
+    """Return the directory that should be used for bundled app assets."""
+    if getattr(sys, "_MEIPASS", None):
+        return Path(sys._MEIPASS).resolve()
+    return Path(__file__).resolve().parent
+
+
+def get_data_path(*parts: str) -> Path:
+    """Resolve a path relative to the app root or current working directory."""
+    app_root = get_app_root()
+    candidates = [app_root.joinpath(*parts), Path(__file__).resolve().parent.joinpath(*parts), Path.cwd().joinpath(*parts)]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
 def ensure_face_landmarker_model(model_path: Path) -> Path:
     if model_path.exists():
         return model_path
     model_path.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Downloading Face Landmarker model...")
+    print("Downloading Face Landmarker model...")
     urlretrieve(MODEL_URL, str(model_path))
     return model_path
 
@@ -106,9 +124,7 @@ def create_landmark_detector():
     from mediapipe.tasks import python as mp_python
     from mediapipe.tasks.python import vision
 
-    model_path = ensure_face_landmarker_model(
-        Path(__file__).resolve().parent / "models" / "face_landmarker.task"
-    )
+    model_path = ensure_face_landmarker_model(get_data_path("models", "face_landmarker.task"))
 
     options = vision.FaceLandmarkerOptions(
         base_options=mp_python.BaseOptions(model_asset_path=str(model_path)),
@@ -227,7 +243,7 @@ def compute_landmark_descriptor(points: List[Tuple[int, int]]) -> List[float]:
 
 def load_identities() -> List[Dict]:
     """Load face identity clusters from JSON."""
-    identities_path = Path(__file__).resolve().parent / "models" / "face_identities.json"
+    identities_path = get_data_path("models", "face_identities.json")
     if not identities_path.exists():
         return []
 
@@ -241,7 +257,7 @@ def load_identities() -> List[Dict]:
 
 def save_identities(data: List[Dict]):
     """Save face identity clusters to JSON."""
-    identities_path = Path(__file__).resolve().parent / "models" / "face_identities.json"
+    identities_path = get_data_path("models", "face_identities.json")
     identities_path.parent.mkdir(parents=True, exist_ok=True)
     with open(identities_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
