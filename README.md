@@ -1,8 +1,11 @@
-triangulated_face_realtime — simplified real-time face recognition
 
-Quick start
+# triangulated_face_realtime
 
-1. Create a virtualenv and install dependencies:
+This is a real-time face recognition project I've been working on. It uses MediaPipe for tracking faces and Gemini to help identify people. There are two versions: a normal one and another that can slowly build the face library while it's running.
+
+## Running it
+
+You'll need Python, the packages in `requirements.txt`, and a Gemini API key.
 
 ```powershell
 python -m venv .venv
@@ -10,153 +13,56 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-2. Put your Gemini API key in `.env` or export `GEMINI_API_KEY`.
-
-3. Run:
+Then run
 
 ```powershell
 python triangulated_face_realtime.py
 ```
 
-Controls
-- `q`: quit
-- `e`: start enrollment
-- `space`: capture enrollment frame
-- `s`: save enrollment
-- `c`: cancel enrollment
-- `g`: request Gemini suggestion for first visible face
-- `a`: accept a pending Gemini suggestion (if any)
-
-Notes
-- Gemini suggestions will be auto-accepted when confidence >= 0.80.
-- If `google-genai` is not available, the script falls back to `google-generativeai` if installed (deprecated).
-
----
-
-## Gemini Auto-Training (NEW)
-
-Real-time automatic face learning with Gemini-powered accuracy optimization.
-
-### Features
-- **Real-time auto-labeling**: Gemini analyzes each detected face in real-time
-- **Confidence-based auto-enrollment**: Faces above 0.85 confidence automatically added to model
-- **User confirmation**: Medium-confidence faces (0.65-0.85) require approval
-- **Retraining detection**: Flags conflicting predictions for model improvement
-- **Full audit logging**: Every decision logged for transparency and debugging
-- **Accuracy dashboard**: Web-based metrics and performance visualization
-
-### Quick Start
-
-1. Start the auto-training real-time recognition:
+or
 
 ```powershell
 python triangulated_face_realtime_autotrain.py
 ```
 
-2. In a separate terminal, start the accuracy dashboard:
+if you want the automatic training version.
+
+## Controls
+
+- q - quit
+- e - start adding someone
+- space - capture a picture
+- s - save
+- c - cancel
+- g - ask Gemini
+- a - accept the suggestion
+
+The auto-training version also has a few extra controls for approving or rejecting suggestions.
+
+If you want to see what it's doing while it's running, start
 
 ```powershell
 python gemini_accuracy_dashboard.py
-# Then visit http://localhost:5000 in your browser
 ```
 
-### Auto-Training Controls
+and open
 
-- `q`: quit
-- `e`: start manual enrollment
-- `space`: capture frame during enrollment
-- `s`: save manual enrollment
-- `c`: cancel enrollment
-- `y`: approve next pending auto-enrollment
-- `n`: reject next pending auto-enrollment
-- `l`: list all pending confirmations
-- `TAB`: show audit log
-
-### How It Works
-
-1. **Detection**: Face detected from webcam
-2. **Gemini Labeling**: Gemini suggests identity with confidence score
-3. **Decision Making**:
-   - **High confidence (>= 0.85)**: Auto-enroll to model
-   - **Medium confidence (0.65-0.85)**: Requires your approval (y/n keys)
-   - **Low confidence (< 0.65)**: Skipped
-   - **Conflicts**: If local match differs from Gemini → flags for retraining
-4. **Logging**: All decisions saved to `models/auto_training_audit.log`
-5. **Dashboard**: Real-time metrics updated as you train
-
-### Dashboard Features
-
-- **Confidence Distribution**: Histogram of all Gemini confidence scores
-- **24h Activity Timeline**: Auto-enrollments, approvals, rejections over time
-- **Performance by Identity**: Per-person enrollment success rates
-- **Recent Decisions**: Latest auto-training actions with timestamps
-- **API Endpoints**:
-  - `/api/summary` - Overall statistics
-  - `/api/confidence-dist` - Confidence distribution data
-  - `/api/timeline` - 24-hour timeline
-  - `/api/identities` - Per-identity performance
-
-### Configuration
-
-Edit `GeminiAutoTrainer` initialization in `triangulated_face_realtime_autotrain.py`:
-
-```python
-trainer = GeminiAutoTrainer(
-    api_key=api_key,
-    auto_enroll_threshold=0.85,        # Confidence threshold for auto-enrollment
-    confidence_retraining_threshold=0.65,  # Threshold for flagging retraining
-    require_user_confirmation=True,     # Require approval for medium confidence
-    model_name="gemini-1.5-flash",     # Gemini model to use
-)
+```
+http://localhost:5000
 ```
 
-### Audit Log
+in your browser.
 
-All decisions are logged to `models/auto_training_audit.log` as JSON:
+Everything gets logged into the `models` folder, so if something goes wrong you can always look back at what happened.
 
-```json
-{"timestamp": "2026-05-19T10:30:45", "action": "auto_enroll", "label": "Alice", "confidence": 0.92}
-{"timestamp": "2026-05-19T10:30:50", "action": "face_enrolled", "label": "Alice", "identity_id": 1}
-{"timestamp": "2026-05-19T10:31:00", "action": "flag_retraining", "label": "Bob", "reason": "conflict"}
-```
-
-### Tips for Best Results
-
-1. **Approve initial faces**: High-confidence auto-enrollments usually correct
-2. **Watch confidence trends**: Low average confidence may indicate lighting issues
-3. **Monitor retraining flags**: These indicate where model needs improvement
-4. **Regular dashboard review**: Spot patterns in what's working/failing
-5. **Adjust thresholds**: If too many false positives, lower auto_enroll_threshold
-6. **Manual cleanup**: Use `photo_library_feedback_trainer.py` for bulk validation
-
-## Windows release build
-
-A packaged Windows build is generated by the release script and is ready to upload as a GitHub Release asset.
-
-### Build locally
+## Windows build
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
 python build_windows_release.py
 ```
 
-This creates:
-- dist/spot_windows/SPOT.exe
-- dist/spot_windows/models/
-- dist/spot_windows/README.md
-- dist/spot_windows.zip
+This creates a Windows executable and a ZIP file inside the `dist` folder.
 
-### First-run notes
+If Windows says it doesn't recognize the application, click **More info** and then **Run anyway**.
 
-- Windows may show a SmartScreen warning for SPOT.exe. Choose More info and then Run anyway.
-- The first launch may download the MediaPipe face model if it is not already present.
-- If you want Gemini suggestions, set GEMINI_API_KEY before launching.
-
-### Release checklist
-
-1. Upload dist/spot_windows.zip to a GitHub Release.
-2. Link the release download in the Demo URL field.
-3. Link the repository source in the Code URL field.
-4. Mention the Windows requirements and first-run steps in the release description.
+You'll also need to set a Gemini API key if you want the Gemini features to work.
