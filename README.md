@@ -54,4 +54,3 @@ This current version reduces those manual knobs to keep the system streamlined, 
 
 * `main.py` for application source code and GUI engine
 * `data/models/` for ONNX neural network models and saved identity profiles
-* `assets/` for CAD documentation photos and screenshots
