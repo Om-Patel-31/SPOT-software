@@ -1,0 +1,21 @@
+# Secrets and local environment configuration
+config/.env
+.env
+*.env
+!.env.example
+
+# Generated Python files and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+
+# Build and release artifacts
+build/
+dist/
+*.spec
+!packaging/SPOT.spec
+
+# Runtime data that may contain personal biometric information
+data/models/auto_training_audit.log
+data/models/*.bak

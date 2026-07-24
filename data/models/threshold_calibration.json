@@ -1,0 +1,19 @@
+{
+  "dataset": "data\\models\\face_identities.json",
+  "labels": [
+    "Nirali",
+    "Nitin",
+    "Om"
+  ],
+  "num_labels": 3,
+  "num_genuine_pairs": 55,
+  "num_impostor_pairs": 23,
+  "eer_threshold": 0.027500954439807497,
+  "eer_far": 0.34782608695652173,
+  "eer_frr": 0.3090909090909091,
+  "recommended_label_thresholds": {
+    "Nitin": 0.027500954439807497,
+    "Nirali": 0.027500954439807497,
+    "Om": 0.16
+  }
+}

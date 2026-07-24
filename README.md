@@ -1,68 +1,57 @@
+# SPOT Computer Vision Suite
 
-# triangulated_face_realtime
+SPOT Computer Vision Suite is a desktop vision hub built for SPOT, a quadruped robot dog. While desktop face recognition might look simple on the surface, real-time facial identification and head pose tracking are essential for a robot dog to safely identify humans and interact naturally in physical environments.
 
-This is a real-time face recognition project I've been working on. It uses MediaPipe for tracking faces and Gemini to help identify people. There are two versions: a normal one and another that can slowly build the face library while it's running.
+## Robot Dog CAD Photos
 
-## Running it
+![1784934523298](image/README/1784934523298.png)
 
-You'll need Python, the packages in `requirements.txt`, and a Gemini API key.
+![1784934535699](image/README/1784934535699.png)
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+## Features
+
+* Mandatory calibration gate that locks the live video feed until at least one identity is enrolled.
+* Interactive 3-step calibration wizard (Center, Left, Right) using real-time yaw estimation and visual AR overlays.
+* Deep feature extraction using OpenCV YuNet face detection and SFace 128-dimensional neural network embeddings.
+* Dynamic dependency checking and automatic model file provisioning.
+
+## Run the shipped application
+
+Download and extract `SPOT_Suite_Windows_v1.0.zip` from the releases page, then run `SPOT_Suite.exe`. It runs on Windows without requiring a Python installation. Required model weights download automatically on first launch if they are missing.
+
+## Build from source
+
+Requirements:
+
+* Python 3.9+
+* Connected webcam
+* Windows 10/11
+
+```bash
+git clone https://github.com/your-username/spot-vision-suite.git
+cd spot-vision-suite
+python main.py
 ```
 
-Then run
+To package into a folder distribution using PyInstaller:
 
-```powershell
-python triangulated_face_realtime.py
+```bash
+pip install pyinstaller
+pyinstaller --noconfirm --onedir --windowed --name "SPOT_Suite" main.py
 ```
 
-or
+The output folder will be generated at `dist/SPOT_Suite/`.
 
-```powershell
-python triangulated_face_realtime_autotrain.py
-```
+## Development History and Iterations
 
-if you want the automatic training version.
+This project went through 6 major iterations to reach this release. Because I was working on this entirely offline without an internet connection at the time, intermediate commits could not be pushed to GitHub as development progressed.
 
-## Controls
+Earlier versions gave the operator manual control over individual computer vision parameters, tracking subroutines, and detection thresholds. While that gave granular control, it introduced too much friction when operating a physical robot dog.
 
-- q - quit
-- e - start adding someone
-- space - capture a picture
-- s - save
-- c - cancel
-- g - ask Gemini
-- a - accept the suggestion
+This current version reduces those manual knobs to keep the system streamlined, while retaining an interactive AR calibration process so the operator still feels connected to the robot's setup. The core recognition backend was also upgraded from basic geometric landmark matching to 128-dimensional deep feature embeddings (YuNet and SFace) for dependable human recognition.
 
-The auto-training version also has a few extra controls for approving or rejecting suggestions.
+## Project layout
 
-If you want to see what it's doing while it's running, start
-
-```powershell
-python gemini_accuracy_dashboard.py
-```
-
-and open
-
-```
-http://localhost:5000
-```
-
-in your browser.
-
-Everything gets logged into the `models` folder, so if something goes wrong you can always look back at what happened.
-
-## Windows build
-
-```powershell
-python build_windows_release.py
-```
-
-This creates a Windows executable and a ZIP file inside the `dist` folder.
-
-If Windows says it doesn't recognize the application, click **More info** and then **Run anyway**.
-
-You'll also need to set a Gemini API key if you want the Gemini features to work.
+* `main.py` for application source code and GUI engine
+* `data/models/` for ONNX neural network models and saved identity profiles
+* `assets/` for CAD documentation photos and screenshots
