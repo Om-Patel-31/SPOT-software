@@ -135,8 +135,12 @@ def ensure_onnx_models() -> Tuple[str, str]:
             try:
                 urllib.request.urlretrieve(url, str(path))
             except Exception as e:
-                logger.error(f"Failed to download {path.name}: {e}")
-                sys.exit(f"Critical Error: Missing neural network weights -> {path.name}")
+                raise RuntimeError(
+                    f"Unable to download {path.name}.\n\n"
+                    "Please check your Internet connection "
+                    "or manually place the ONNX model into data/models.\n\n"
+                    f"Original error:\n{e}"
+                )
                 
     return str(yunet_path), str(sface_path)
 
@@ -233,9 +237,40 @@ class WebcamThread(QThread):
         self.running = True
         
         # Provision and Load ONNX Models
-        yunet_path, sface_path = ensure_onnx_models()
-        self.detector = cv2.FaceDetectorYN.create(yunet_path, "", (1280, 720), score_threshold=0.85)
-        self.recognizer = cv2.FaceRecognizerSF.create(sface_path, "")
+        try:
+            yunet_path, sface_path = ensure_onnx_models()
+
+            if not hasattr(cv2, "FaceDetectorYN"):
+                raise RuntimeError(
+                    "This OpenCV build does not support FaceDetectorYN.\n"
+                    "Please install opencv-python >= 4.8."
+                )
+
+            if not hasattr(cv2, "FaceRecognizerSF"):
+                raise RuntimeError(
+                    "This OpenCV build does not support FaceRecognizerSF.\n"
+                    "Please install opencv-python >= 4.8."
+                )
+
+            self.detector = cv2.FaceDetectorYN.create(
+                yunet_path,
+                "",
+                (1280, 720),
+                score_threshold=0.85,
+            )
+
+            self.recognizer = cv2.FaceRecognizerSF.create(
+                sface_path,
+                "",
+            )
+
+        except Exception as e:
+            QMessageBox.critical(
+                None,
+                "CNN Initialization Failed",
+                str(e),
+            )
+            raise
 
     def stop(self):
         self.running = False
@@ -243,7 +278,13 @@ class WebcamThread(QThread):
 
     def run(self):
         cap = cv2.VideoCapture(0)
+
         if not cap.isOpened():
+            QMessageBox.critical(
+                None,
+                "Camera Error",
+                "No webcam could be opened."
+            )
             return
 
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -744,9 +785,28 @@ class SPOTDesktopWindow(QMainWindow):
             self.identities_table.setItem(row, 3, QTableWidgetItem(str(identity.get("threshold", 0.363))))
 
     def launch_calibration_wizard(self):
-        dialog = AR3DFaceCalibrationDialog(self)
-        dialog.calibration_completed.connect(lambda name: (self.check_calibration_status(), self.refresh_dashboard_data()))
-        dialog.exec()
+        try:
+            dialog = AR3DFaceCalibrationDialog(self)
+
+            dialog.calibration_completed.connect(
+                lambda _: (
+                    self.check_calibration_status(),
+                    self.refresh_dashboard_data(),
+                )
+            )
+
+            dialog.exec()
+
+        except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+
+            QMessageBox.critical(
+                self,
+                "Calibration Wizard Error",
+                f"The CNN configuration wizard could not start.\n\n{e}",
+            )
 
     def launch_realtime_tab(self):
         if not self.check_calibration_status():

@@ -17,15 +17,36 @@ SPOT Computer Vision Suite is a desktop vision hub built for SPOT, a quadruped r
 
 ## Run the shipped application
 
-Download and extract `SPOT_Suite_Windows_v1.0.zip` from the releases page, then run `SPOT_Suite.exe`. It runs on Windows without requiring a Python installation. Required model weights download automatically on first launch if they are missing.
+Download and extract `SPOT_Suite_Windows_v1.0.zip` from the Releases page, then run `SPOT_Suite.exe`.
+
+The application is packaged as a standalone executable and does not require Python to be installed.
+
+### First Launch
+
+On the first launch, the application automatically downloads the required OpenCV YuNet and SFace ONNX model files if they are not already present.
+
+Because of this, the first launch requires:
+
+* An active internet connection
+* Permission to create the `data/models` folder beside the executable
+* A connected webcam for the calibration wizard
+
+The initial download only happens once. After the models have been downloaded, the application can be used offline.
+
+If the calibration wizard cannot start, verify that:
+
+* A webcam is connected and accessible by Windows.
+* The application has permission to write to the installation folder.
+* The initial model download completed successfully.
 
 ## Build from source
 
 Requirements:
 
 * Python 3.9+
-* Connected webcam
 * Windows 10/11
+* Connected webcam
+* Internet connection on first run for automatic model download
 
 ```bash
 git clone https://github.com/your-username/spot-vision-suite.git
@@ -33,24 +54,31 @@ cd spot-vision-suite
 python main.py
 ```
 
-To package into a folder distribution using PyInstaller:
+## Building the executable
+
+Install PyInstaller:
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --onedir --windowed --name "SPOT_Suite" main.py
 ```
 
-The output folder will be generated at `dist/SPOT_Suite/`.
+Build a single executable:
+
+```bash
+pyinstaller --noconfirm --onefile --windowed --name "SPOT_Suite" main.py
+```
+
+The executable will be generated in the `dist` folder.
 
 ## Development History and Iterations
 
-This project went through 6 major iterations to reach this release. Because I was working on this entirely offline without an internet connection at the time, intermediate commits could not be pushed to GitHub as development progressed.
+This project went through six major iterations to reach this release. Because I was working on this entirely offline without an internet connection at the time, intermediate commits could not be pushed to GitHub as development progressed.
 
 Earlier versions gave the operator manual control over individual computer vision parameters, tracking subroutines, and detection thresholds. While that gave granular control, it introduced too much friction when operating a physical robot dog.
 
-This current version reduces those manual knobs to keep the system streamlined, while retaining an interactive AR calibration process so the operator still feels connected to the robot's setup. The core recognition backend was also upgraded from basic geometric landmark matching to 128-dimensional deep feature embeddings (YuNet and SFace) for dependable human recognition.
+This current version reduces those manual controls to keep the system streamlined while retaining an interactive AR calibration process so the operator still feels connected to the robot's setup. The recognition backend was also upgraded from basic geometric landmark matching to 128-dimensional deep feature embeddings (YuNet and SFace) for more dependable human recognition.
 
-## Project layout
+## Project Layout
 
-* `main.py` for application source code and GUI engine
-* `data/models/` for ONNX neural network models and saved identity profiles
+* `main.py` — application source code and GUI
+* `data/models/` — downloaded ONNX models and enrolled identity profiles
